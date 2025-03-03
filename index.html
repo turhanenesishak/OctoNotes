@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OctoNotes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.textbox-wrapper:focus-within .character-count {
+opacity: 1;
+}
+.textbox::-webkit-scrollbar {
+width: 8px;
+}
+.textbox::-webkit-scrollbar-track {
+background: transparent;
+}
+.textbox::-webkit-scrollbar-thumb {
+background: #4b5563;
+border-radius: 4px;
+}
+.textbox::-webkit-scrollbar-thumb:hover {
+background: #6b7280;
+}
+</style>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#3b82f6',
+secondary: '#6b7280'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px',
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+</head>
+<body class="bg-gray-900 min-h-screen flex items-center justify-center p-4">
+<div class="w-full max-w-3xl">
+<div class="textbox-wrapper relative bg-gray-800 rounded-lg shadow-lg p-6">
+<label for="textInput" class="block text-gray-300 text-sm font-medium mb-2">Message</label>
+<div class="relative">
+<textarea
+id="textInput"
+class="textbox w-full bg-gray-700 text-gray-100 rounded p-4 outline-none border-2 border-gray-600 focus:border-primary transition-colors duration-200 resize-none min-h-[120px]"
+placeholder="Type your message here..."
+aria-label="Text input area"
+></textarea>
+<div class="absolute bottom-3 right-3 flex items-center space-x-3">
+<span class="character-count text-sm text-gray-400 opacity-0 transition-opacity duration-200">
+<span id="charCount">0</span>/500
+</span>
+<button
+id="clearBtn"
+class="text-gray-400 hover:text-gray-200 transition-colors duration-200 p-1 !rounded-button"
+aria-label="Clear text"
+>
+<i class="ri-close-line ri-lg"></i>
+</button>
+<button
+id="copyBtn"
+class="text-gray-400 hover:text-gray-200 transition-colors duration-200 p-1 !rounded-button"
+aria-label="Copy text"
+>
+<i class="ri-file-copy-line ri-lg"></i>
+</button>
+</div>
+</div>
+<div id="notification" class="fixed top-4 right-4 bg-gray-700 text-gray-100 px-4 py-2 rounded shadow-lg transform translate-y-[-100%] opacity-0 transition-all duration-300"></div>
+</div>
+<div class="text-gray-500 text-sm mt-4">© 2025 OctoNotes All rights reserved.</div>
+</div>
+<script>
+const textInput = document.getElementById('textInput');
+const charCount = document.getElementById('charCount');
+const clearBtn = document.getElementById('clearBtn');
+const copyBtn = document.getElementById('copyBtn');
+const notification = document.getElementById('notification');
+function showNotification(message) {
+  notification.textContent = message;
+  notification.style.transform = 'translateY(0)';
+  notification.style.opacity = '1';
+  setTimeout(() => {
+    notification.style.transform = 'translateY(-100%)';
+    notification.style.opacity = '0';
+  }, 2000);
+}
+function updateURL(text) {
+  const newURL = `${window.location.origin}${window.location.pathname}?text=${encodeURIComponent(text)}`;
+  window.history.replaceState({}, '', newURL);
+}
+function getTextFromURL() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const text = urlParams.get('text');
+  if (text) {
+    textInput.value = decodeURIComponent(text);
+    charCount.textContent = textInput.value.length;
+    textInput.style.height = 'auto';
+    textInput.style.height = (textInput.scrollHeight) + 'px';
+  }
+}
+textInput.addEventListener('input', function() {
+  const length = this.value.length;
+  charCount.textContent = length;
+  if (length > 500) {
+    this.value = this.value.substring(0, 500);
+    charCount.textContent = 500;
+  }
+  this.style.height = 'auto';
+  this.style.height = (this.scrollHeight) + 'px';
+  updateURL(this.value);
+});
+clearBtn.addEventListener('click', function() {
+  textInput.value = '';
+  charCount.textContent = '0';
+  textInput.style.height = '120px';
+  updateURL('');
+  showNotification('Text cleared');
+});
+copyBtn.addEventListener('click', async function() {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    showNotification('URL copied to clipboard');
+  } catch (err) {
+    showNotification('Failed to copy URL');
+  }
+});
+textInput.addEventListener('focus', function() {
+  this.parentElement.parentElement.classList.add('ring-2', 'ring-primary', 'ring-opacity-50');
+});
+textInput.addEventListener('blur', function() {
+  this.parentElement.parentElement.classList.remove('ring-2', 'ring-primary', 'ring-opacity-50');
+});
+window.addEventListener('load', getTextFromURL);
+</script>
+</body>
+</html>
